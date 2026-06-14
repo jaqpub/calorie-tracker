@@ -31,7 +31,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tabs { display: flex; margin-top: 8px; }
 .tab { flex: 1; padding: 10px 4px; border: none; background: none; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-.log-area { padding: 16px 16px 130px; }
+.log-area { padding: 16px 16px 150px; }
 .entry-card { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); margin-bottom: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
 .entry-info { flex: 1; min-width: 0; }
 .entry-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -43,14 +43,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .empty-icon { font-size: 40px; margin-bottom: 14px; }
 .view { display: none; }
 .view.active { display: block; }
-.input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 0.5px solid var(--border); padding: 12px 16px 36px; z-index: 20; }
+
+/* Input bar */
+.input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 0.5px solid var(--border); padding: 10px 12px 36px; z-index: 20; }
 .input-row { display: flex; gap: 8px; align-items: flex-end; }
 .log-textarea { flex: 1; border: 1px solid var(--border-strong); border-radius: 22px; padding: 11px 16px; font-size: 16px; font-family: inherit; resize: none; background: var(--bg); color: var(--text); line-height: 1.4; min-height: 44px; max-height: 120px; outline: none; overflow-y: auto; -webkit-appearance: none; }
 .log-textarea:focus { border-color: var(--accent); }
-.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s; -webkit-appearance: none; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--bg); color: var(--muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
+.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
 .send-btn:disabled { opacity: 0.4; }
-.loading-msg { font-size: 13px; color: var(--muted); margin-top: 8px; text-align: center; min-height: 18px; }
-.toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 30; opacity: 0; transition: opacity 0.2s; white-space: nowrap; pointer-events: none; }
+.icon-btn:disabled { opacity: 0.4; }
+
+/* Image preview */
+.img-preview-wrap { margin-bottom: 8px; position: relative; display: inline-block; }
+.img-preview { height: 72px; border-radius: 10px; border: 0.5px solid var(--border); display: block; }
+.img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; border: none; font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+.loading-msg { font-size: 13px; color: var(--muted); margin-top: 7px; text-align: center; min-height: 18px; }
+.toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 30; opacity: 0; transition: opacity 0.2s; white-space: nowrap; pointer-events: none; }
 .toast.show { opacity: 1; }
 .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--hint); font-weight: 500; margin: 4px 0 10px; }
 .settings-box { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); padding: 16px; margin-bottom: 12px; }
@@ -112,11 +122,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   <div class="view active" id="view-today">
     <div id="meal-list"></div>
   </div>
-
   <div class="view" id="view-history">
     <div id="history-list"></div>
   </div>
-
   <div class="view" id="view-settings">
     <div class="settings-box">
       <div class="section-label">Daily goals</div>
@@ -133,13 +141,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div class="settings-box">
       <div class="section-label">How to log</div>
-      <p style="font-size:13px;color:var(--muted);line-height:1.6">Tap the text box, then tap the <strong>mic icon</strong> on your iPhone keyboard. Say what you ate. Tap the blue send button. Claude estimates your calories and macros automatically.</p>
+      <p style="font-size:13px;color:var(--muted);line-height:1.6">Tap the text box and use your mic to say what you ate — or tap the 📷 button to snap or upload a photo. Claude estimates your calories and macros automatically.</p>
     </div>
   </div>
 </div>
 
+<!-- Hidden file input -->
+<input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+
 <div class="input-bar" id="input-bar">
+  <div id="img-preview-container"></div>
   <div class="input-row">
+    <button class="icon-btn" onclick="document.getElementById('photo-input').click()" id="photo-btn" aria-label="Add photo">📷</button>
     <textarea class="log-textarea" id="log-input" placeholder="What did you eat?" rows="1"></textarea>
     <button class="send-btn" id="send-btn" onclick="submitEntry()" aria-label="Log food">↑</button>
   </div>
@@ -155,6 +168,7 @@ const GOALS_KEY = 'clog-goals-v4';
 const DEFAULT_GOALS = {cal:2100,protein:160,carbs:220,fat:65};
 
 let data = {}, goals = {...DEFAULT_GOALS}, toastTimer;
+let pendingImageB64 = null, pendingImageType = null;
 
 function todayKey() { return new Date().toLocaleDateString('en-CA'); }
 function formatTime(iso) { return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
@@ -168,13 +182,11 @@ function formatDate(d) {
 function totals(meals=[]) {
   return meals.reduce((t,m)=>({cal:t.cal+(m.cal||0),protein:t.protein+(m.protein||0),carbs:t.carbs+(m.carbs||0),fat:t.fat+(m.fat||0)}),{cal:0,protein:0,carbs:0,fat:0});
 }
-
 function load() {
   try { data = JSON.parse(localStorage.getItem(DATA_KEY)||'{}'); } catch { data={}; }
   try { goals = JSON.parse(localStorage.getItem(GOALS_KEY)||'null')||{...DEFAULT_GOALS}; } catch { goals={...DEFAULT_GOALS}; }
 }
 function save() { localStorage.setItem(DATA_KEY,JSON.stringify(data)); }
-
 function showToast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -198,10 +210,9 @@ function render() {
   const pct=Math.min(100,Math.round((tot.cal/goals.cal)*100));
   const fill=document.getElementById('progress-fill');
   fill.style.width=pct+'%'; fill.classList.toggle('over',over);
-
   const list=document.getElementById('meal-list');
   if (!meals.length) {
-    list.innerHTML='<div class="empty"><div class="empty-icon">🎙️</div>Tap the text box below,<br>hit the mic on your keyboard,<br>say what you ate, and send.</div>';
+    list.innerHTML='<div class="empty"><div class="empty-icon">🎙️</div>Tap the text box and use your mic,<br>or tap 📷 to log from a photo.</div>';
   } else {
     list.innerHTML=meals.map((m,i)=>`
       <div class="entry-card">
@@ -248,23 +259,19 @@ function toggleDay(d) {
   const el=document.getElementById('day-'+d);
   el.style.display=el.style.display==='block'?'none':'block';
 }
-
 function deleteEntry(dateKey,index) {
   data[dateKey].splice(index,1);
   if (!data[dateKey].length) delete data[dateKey];
   save(); render();
 }
-
 function clearToday() {
   if (!confirm('Clear all entries for today?')) return;
   delete data[todayKey()]; save(); render();
 }
-
 function clearAll() {
   if (!confirm('Clear ALL data? Cannot be undone.')) return;
   data={}; save(); render();
 }
-
 function saveGoals() {
   goals={
     cal:parseInt(document.getElementById('g-cal').value)||DEFAULT_GOALS.cal,
@@ -275,7 +282,6 @@ function saveGoals() {
   localStorage.setItem(GOALS_KEY,JSON.stringify(goals));
   render(); showToast('Goals saved');
 }
-
 function showTab(name) {
   ['today','history','settings'].forEach(t=>{
     document.getElementById('view-'+t).classList.toggle('active',t===name);
@@ -290,48 +296,121 @@ function showTab(name) {
   }
 }
 
-const textarea=document.getElementById('log-input');
-textarea.addEventListener('input',function(){
-  this.style.height='auto';
-  this.style.height=Math.min(this.scrollHeight,120)+'px';
+// Photo handling
+function handlePhoto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const dataUrl = e.target.result;
+    pendingImageB64 = dataUrl.split(',')[1];
+    pendingImageType = file.type || 'image/jpeg';
+    // Show preview
+    const container = document.getElementById('img-preview-container');
+    container.innerHTML = `<div class="img-preview-wrap">
+      <img class="img-preview" src="${dataUrl}" alt="Food photo">
+      <button class="img-remove" onclick="removePhoto()" aria-label="Remove photo">×</button>
+    </div>`;
+  };
+  reader.readAsDataURL(file);
+  // Reset input so same file can be re-selected
+  event.target.value = '';
+}
+
+function removePhoto() {
+  pendingImageB64 = null;
+  pendingImageType = null;
+  document.getElementById('img-preview-container').innerHTML = '';
+}
+
+// Auto-resize textarea
+const textarea = document.getElementById('log-input');
+textarea.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
 });
-textarea.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitEntry();}
+textarea.addEventListener('keydown', e => {
+  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); submitEntry(); }
 });
 
 async function submitEntry() {
-  const text=textarea.value.trim();
-  if (!text) return;
-  const btn=document.getElementById('send-btn');
-  const loading=document.getElementById('loading-msg');
-  btn.disabled=true;
-  loading.textContent='Estimating calories and macros…';
+  const text = textarea.value.trim();
+  if (!text && !pendingImageB64) return;
 
-  const prompt=`You are a nutrition estimator. The user describes food they ate. Return ONLY a JSON array. Each item: {"name":"brief name","cal":number,"protein":number,"carbs":number,"fat":number}. All numbers are integers. Macros in grams. Be accurate for typical portions. Multiple foods = multiple entries. No markdown, no explanation, only the JSON array.\n\nUser said: "${text}"`;
+  const btn = document.getElementById('send-btn');
+  const loading = document.getElementById('loading-msg');
+  btn.disabled = true;
+  loading.textContent = 'Estimating calories and macros…';
+
+  const prompt = `You are a nutrition estimator. The user describes food they ate, possibly with a photo. Return ONLY a valid JSON array — no markdown, no code fences, no explanation, nothing before or after the array. Each item must have: {"name":"brief food name","cal":number,"protein":number,"carbs":number,"fat":number}. All numbers are integers. Macros in grams. Be accurate for typical portions. If multiple foods are shown or described, return multiple entries. Start your response with [ and end with ].${text ? '\n\nUser said: "' + text + '"' : '\n\nNo description provided — estimate from the photo only.'}`;
 
   try {
-    const res=await fetch(API,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    // Build message content
+    const content = [];
+    if (pendingImageB64) {
+      content.push({
+        type: 'image',
+        source: { type: 'base64', media_type: pendingImageType, data: pendingImageB64 }
+      });
+    }
+    content.push({ type: 'text', text: prompt });
+
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content }]
+      })
     });
-    const json=await res.json();
-    const raw=json.content?.[0]?.text||'[]';
-    const entries=JSON.parse(raw.replace(/```json|```/g,'').trim());
-    if (!Array.isArray(entries)||!entries.length) throw new Error('empty');
-    const key=todayKey();
-    if (!data[key]) data[key]=[];
-    entries.forEach(e=>data[key].push({name:e.name,cal:Math.round(e.cal||0),protein:Math.round(e.protein||0),carbs:Math.round(e.carbs||0),fat:Math.round(e.fat||0),time:new Date().toISOString()}));
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error('API error:', res.status, errText);
+      throw new Error('API error ' + res.status);
+    }
+
+    const json = await res.json();
+    const raw = (json.content?.[0]?.text || '').trim();
+
+    // Robustly extract JSON array
+    const match = raw.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON array found in: ' + raw);
+    const entries = JSON.parse(match[0]);
+
+    if (!Array.isArray(entries) || !entries.length) throw new Error('Empty array');
+
+    const key = todayKey();
+    if (!data[key]) data[key] = [];
+    entries.forEach(e => data[key].push({
+      name: String(e.name || 'Food'),
+      cal: Math.round(Number(e.cal) || 0),
+      protein: Math.round(Number(e.protein) || 0),
+      carbs: Math.round(Number(e.carbs) || 0),
+      fat: Math.round(Number(e.fat) || 0),
+      time: new Date().toISOString()
+    }));
     save(); render();
-    const totalCal=entries.reduce((s,e)=>s+(e.cal||0),0);
-    showToast('Logged · '+totalCal.toLocaleString()+' cal');
-    textarea.value=''; textarea.style.height='auto';
+
+    const totalCal = entries.reduce((s,e) => s + (Number(e.cal)||0), 0);
+    showToast('Logged · ' + Math.round(totalCal).toLocaleString() + ' cal');
+    textarea.value = ''; textarea.style.height = 'auto';
+    removePhoto();
     showTab('today');
-  } catch {
-    showToast("Couldn't parse — try again");
+
+  } catch(err) {
+    console.error('Submit error:', err);
+    showToast('Error: ' + (err.message || 'Try again'));
   }
-  btn.disabled=false;
-  loading.textContent='\u00a0';
+
+  btn.disabled = false;
+  loading.textContent = '\u00a0';
 }
 
 load(); render();
