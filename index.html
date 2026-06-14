@@ -28,6 +28,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .setup-btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit; }
 .setup-note { font-size: 12px; color: var(--hint); margin-top: 16px; line-height: 1.5; }
 
+/* Header */
 .header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 52px 18px 0; position: sticky; top: 0; z-index: 10; }
 .header-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
@@ -43,31 +44,62 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tabs { display: flex; margin-top: 8px; }
 .tab { flex: 1; padding: 10px 4px; border: none; background: none; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; }
 .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* Log area */
 .log-area { padding: 16px 16px 150px; }
-.entry-card { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); margin-bottom: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; }
+
+/* Entry cards with swipe */
+.entry-wrap { position: relative; margin-bottom: 8px; border-radius: 12px; overflow: hidden; }
+.entry-actions { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: stretch; }
+.action-edit { background: var(--accent); color: #fff; border: none; padding: 0 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.action-delete { background: var(--danger); color: #fff; border: none; padding: 0 18px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.entry-card { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; position: relative; transition: transform 0.2s ease; will-change: transform; touch-action: pan-y; }
+.entry-card.swiped { border-radius: 12px 0 0 12px; }
 .entry-info { flex: 1; min-width: 0; }
 .entry-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .entry-macros { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .entry-time { font-size: 11px; color: var(--hint); margin-top: 2px; }
 .entry-cal { font-size: 15px; font-weight: 600; white-space: nowrap; padding-top: 1px; }
-.del-btn { background: none; border: none; color: var(--hint); cursor: pointer; font-size: 22px; line-height: 1; padding: 0 0 0 4px; flex-shrink: 0; }
+
 .empty { text-align: center; padding: 52px 0 24px; color: var(--muted); font-size: 15px; line-height: 1.7; }
 .empty-icon { font-size: 40px; margin-bottom: 14px; }
 .view { display: none; }
 .view.active { display: block; }
+
+/* Undo bar */
+.undo-bar { position: fixed; bottom: 130px; left: 16px; right: 16px; background: #1a1a18; color: #fff; border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; z-index: 25; font-size: 14px; opacity: 0; transform: translateY(10px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; }
+.undo-bar.show { opacity: 1; transform: translateY(0); pointer-events: all; }
+.undo-btn { background: none; border: none; color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 4px 0; }
+
+/* Edit modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 40; display: flex; align-items: flex-end; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal { background: var(--surface); border-radius: 20px 20px 0 0; padding: 20px 20px 40px; width: 100%; transform: translateY(100%); transition: transform 0.25s ease; }
+.modal-overlay.show .modal { transform: translateY(0); }
+.modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.modal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.modal-row label { font-size: 13px; color: var(--muted); width: 72px; flex-shrink: 0; }
+.modal-row input { flex: 1; border: 0.5px solid var(--border-strong); border-radius: 8px; padding: 9px 12px; font-size: 15px; background: var(--bg); color: var(--text); font-family: inherit; outline: none; -webkit-appearance: none; }
+.modal-row input:focus { border-color: var(--accent); }
+.modal-save { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit; margin-top: 4px; }
+.modal-cancel { width: 100%; padding: 12px; border-radius: 10px; border: 0.5px solid var(--border-strong); background: none; color: var(--muted); font-size: 15px; cursor: pointer; font-family: inherit; margin-top: 8px; }
+
+/* Input bar */
 .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 0.5px solid var(--border); padding: 10px 12px 36px; z-index: 20; }
 .input-row { display: flex; gap: 8px; align-items: flex-end; }
 .log-textarea { flex: 1; border: 1px solid var(--border-strong); border-radius: 22px; padding: 11px 16px; font-size: 16px; font-family: inherit; resize: none; background: var(--bg); color: var(--text); line-height: 1.4; min-height: 44px; max-height: 120px; outline: none; overflow-y: auto; -webkit-appearance: none; }
 .log-textarea:focus { border-color: var(--accent); }
-.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--bg); color: var(--muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--bg); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
 .send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
 .send-btn:disabled { opacity: 0.4; }
 .img-preview-wrap { margin-bottom: 8px; position: relative; display: inline-block; }
 .img-preview { height: 72px; border-radius: 10px; border: 0.5px solid var(--border); display: block; }
-.img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; border: none; font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; border: none; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .loading-msg { font-size: 13px; color: var(--muted); margin-top: 7px; text-align: center; min-height: 18px; }
-.toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 30; opacity: 0; transition: opacity 0.2s; white-space: nowrap; pointer-events: none; }
+.toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 50; opacity: 0; transition: opacity 0.2s; white-space: nowrap; pointer-events: none; }
 .toast.show { opacity: 1; }
+
+/* Settings */
 .section-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--hint); font-weight: 500; margin: 4px 0 10px; }
 .settings-box { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); padding: 16px; margin-bottom: 12px; }
 .settings-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -78,6 +110,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .btn-primary { background: var(--accent); color: #fff; border-color: transparent; font-weight: 500; margin-top: 12px; }
 .btn-danger { color: var(--danger); border-color: rgba(220,38,38,0.3); }
 .btn-muted { color: var(--muted); }
+
+/* History */
 .hist-day { background: var(--surface); border-radius: 12px; border: 0.5px solid var(--border); margin-bottom: 10px; overflow: hidden; }
 .hist-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; cursor: pointer; }
 .hist-meals { display: none; border-top: 0.5px solid var(--border); }
@@ -85,11 +119,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .hist-meal-row:last-child { border-bottom: none; }
 .hist-total { display: flex; justify-content: space-between; padding: 10px 14px; background: var(--bg); font-size: 13px; color: var(--muted); border-top: 0.5px solid var(--border); }
 .over { color: var(--danger) !important; }
+.hint-text { font-size: 12px; color: var(--hint); text-align: center; margin-top: 8px; }
 </style>
 </head>
 <body>
 
-<!-- Setup screen (shown if no API key stored) -->
 <div id="setup-screen" class="setup-screen" style="display:none">
   <div style="font-size:48px;margin-bottom:16px">🥗</div>
   <h1>Calorie Log</h1>
@@ -99,10 +133,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" spellcheck="false">
     <button class="setup-btn" onclick="saveApiKey()">Save & Continue</button>
   </div>
-  <p class="setup-note">Get a key at console.anthropic.com → API Keys. Usage costs a fraction of a cent per entry.</p>
+  <p class="setup-note">Get a key at console.anthropic.com → API Keys.</p>
 </div>
 
-<!-- Main app (hidden until API key present) -->
 <div id="main-app" style="display:none">
   <div class="header">
     <div class="header-top">
@@ -110,26 +143,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <span class="date-label" id="date-label"></span>
     </div>
     <div class="pills">
-      <div class="pill">
-        <span class="pill-val" id="s-cal">—</span>
-        <span class="pill-label">Cal</span>
-        <span class="pill-sub" id="s-cal-sub">&nbsp;</span>
-      </div>
-      <div class="pill">
-        <span class="pill-val" id="s-protein" style="color:var(--protein)">—</span>
-        <span class="pill-label">Protein</span>
-        <span class="pill-sub" id="s-protein-sub">&nbsp;</span>
-      </div>
-      <div class="pill">
-        <span class="pill-val" id="s-carbs" style="color:var(--carbs)">—</span>
-        <span class="pill-label">Carbs</span>
-        <span class="pill-sub" id="s-carbs-sub">&nbsp;</span>
-      </div>
-      <div class="pill">
-        <span class="pill-val" id="s-fat" style="color:var(--fat)">—</span>
-        <span class="pill-label">Fat</span>
-        <span class="pill-sub" id="s-fat-sub">&nbsp;</span>
-      </div>
+      <div class="pill"><span class="pill-val" id="s-cal">—</span><span class="pill-label">Cal</span><span class="pill-sub" id="s-cal-sub">&nbsp;</span></div>
+      <div class="pill"><span class="pill-val" id="s-protein" style="color:var(--protein)">—</span><span class="pill-label">Protein</span><span class="pill-sub" id="s-protein-sub">&nbsp;</span></div>
+      <div class="pill"><span class="pill-val" id="s-carbs" style="color:var(--carbs)">—</span><span class="pill-label">Carbs</span><span class="pill-sub" id="s-carbs-sub">&nbsp;</span></div>
+      <div class="pill"><span class="pill-val" id="s-fat" style="color:var(--fat)">—</span><span class="pill-label">Fat</span><span class="pill-sub" id="s-fat-sub">&nbsp;</span></div>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
     <div class="tabs">
@@ -177,6 +194,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   </div>
 </div>
 
+<!-- Undo bar -->
+<div class="undo-bar" id="undo-bar">
+  <span id="undo-label">Entry deleted</span>
+  <button class="undo-btn" onclick="undoDelete()">Undo</button>
+</div>
+
+<!-- Edit modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Edit entry</div>
+    <div class="modal-row"><label>Name</label><input type="text" id="e-name"></div>
+    <div class="modal-row"><label>Calories</label><input type="number" id="e-cal"></div>
+    <div class="modal-row"><label>Protein (g)</label><input type="number" id="e-protein"></div>
+    <div class="modal-row"><label>Carbs (g)</label><input type="number" id="e-carbs"></div>
+    <div class="modal-row"><label>Fat (g)</label><input type="number" id="e-fat"></div>
+    <button class="modal-save" onclick="saveEdit()">Save</button>
+    <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -186,8 +223,11 @@ const GOALS_KEY = 'clog-goals-v4';
 const APIKEY_KEY = 'clog-apikey';
 const DEFAULT_GOALS = {cal:2100,protein:160,carbs:220,fat:65};
 
-let data = {}, goals = {...DEFAULT_GOALS}, toastTimer;
+let data = {}, goals = {...DEFAULT_GOALS}, toastTimer, undoTimer;
 let pendingImageB64 = null, pendingImageType = null;
+let deletedEntry = null; // {dateKey, index, entry} for undo
+let editTarget = null;   // {dateKey, index} for edit modal
+let activeSwipe = null;  // currently swiped card element
 
 function todayKey() { return new Date().toLocaleDateString('en-CA'); }
 function formatTime(iso) { return new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }
@@ -202,36 +242,30 @@ function totals(meals=[]) {
   return meals.reduce((t,m)=>({cal:t.cal+(m.cal||0),protein:t.protein+(m.protein||0),carbs:t.carbs+(m.carbs||0),fat:t.fat+(m.fat||0)}),{cal:0,protein:0,carbs:0,fat:0});
 }
 function load() {
-  try { data = JSON.parse(localStorage.getItem(DATA_KEY)||'{}'); } catch { data={}; }
-  try { goals = JSON.parse(localStorage.getItem(GOALS_KEY)||'null')||{...DEFAULT_GOALS}; } catch { goals={...DEFAULT_GOALS}; }
+  try { data=JSON.parse(localStorage.getItem(DATA_KEY)||'{}'); } catch { data={}; }
+  try { goals=JSON.parse(localStorage.getItem(GOALS_KEY)||'null')||{...DEFAULT_GOALS}; } catch { goals={...DEFAULT_GOALS}; }
 }
 function save() { localStorage.setItem(DATA_KEY,JSON.stringify(data)); }
 function getApiKey() { return localStorage.getItem(APIKEY_KEY)||''; }
 
 function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-ant-')) { alert('That doesn\'t look right — key should start with sk-ant-'); return; }
-  localStorage.setItem(APIKEY_KEY, key);
-  document.getElementById('setup-screen').style.display = 'none';
-  document.getElementById('main-app').style.display = 'block';
+  const key=document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) { alert("Doesn't look right — key should start with sk-ant-"); return; }
+  localStorage.setItem(APIKEY_KEY,key);
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
   render();
 }
-
 function resetApiKey() {
-  if (!confirm('Remove API key? You\'ll need to enter it again.')) return;
+  if (!confirm('Remove API key?')) return;
   localStorage.removeItem(APIKEY_KEY);
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
 }
-
 function init() {
   load();
-  if (getApiKey()) {
-    document.getElementById('main-app').style.display = 'block';
-    render();
-  } else {
-    document.getElementById('setup-screen').style.display = 'flex';
-  }
+  if (getApiKey()) { document.getElementById('main-app').style.display='block'; render(); }
+  else { document.getElementById('setup-screen').style.display='flex'; }
 }
 
 function showToast(msg) {
@@ -239,6 +273,114 @@ function showToast(msg) {
   t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// Undo
+function showUndo(label) {
+  const bar=document.getElementById('undo-bar');
+  document.getElementById('undo-label').textContent=label;
+  bar.classList.add('show');
+  clearTimeout(undoTimer);
+  undoTimer=setTimeout(()=>{ bar.classList.remove('show'); deletedEntry=null; },5000);
+}
+function undoDelete() {
+  if (!deletedEntry) return;
+  const {dateKey,index,entry}=deletedEntry;
+  if (!data[dateKey]) data[dateKey]=[];
+  data[dateKey].splice(index,0,entry);
+  save(); render();
+  document.getElementById('undo-bar').classList.remove('show');
+  deletedEntry=null;
+}
+
+// Delete
+function deleteEntry(dateKey,index) {
+  resetSwipe();
+  const entry=data[dateKey][index];
+  deletedEntry={dateKey,index,entry};
+  data[dateKey].splice(index,1);
+  if (!data[dateKey].length) delete data[dateKey];
+  save(); render();
+  showUndo('Deleted "'+entry.name+'"');
+}
+
+// Swipe to reveal edit/delete
+function initSwipe(card, dateKey, index) {
+  let startX=0, startY=0, dx=0, swiped=false;
+  const THRESHOLD=60;
+
+  card.addEventListener('touchstart',e=>{
+    if (activeSwipe && activeSwipe!==card) resetSwipe();
+    startX=e.touches[0].clientX;
+    startY=e.touches[0].clientY;
+    dx=0;
+  },{passive:true});
+
+  card.addEventListener('touchmove',e=>{
+    dx=e.touches[0].clientX-startX;
+    const dy=e.touches[0].clientY-startY;
+    if (Math.abs(dy)>Math.abs(dx)) return; // vertical scroll
+    if (dx>0 && !swiped) return; // only left swipe
+    const clamp=Math.max(-140,Math.min(0,dx+(swiped?-140:0)));
+    card.style.transform=`translateX(${clamp}px)`;
+  },{passive:true});
+
+  card.addEventListener('touchend',()=>{
+    const total=dx+(swiped?-140:0);
+    if (total<-THRESHOLD) {
+      card.style.transform='translateX(-140px)';
+      card.classList.add('swiped');
+      swiped=true;
+      activeSwipe=card;
+    } else {
+      card.style.transform='';
+      card.classList.remove('swiped');
+      swiped=false;
+      if (activeSwipe===card) activeSwipe=null;
+    }
+  });
+}
+
+function resetSwipe() {
+  if (activeSwipe) {
+    activeSwipe.style.transform='';
+    activeSwipe.classList.remove('swiped');
+    activeSwipe=null;
+  }
+}
+
+// Edit modal
+function openEdit(dateKey,index) {
+  resetSwipe();
+  const m=data[dateKey][index];
+  editTarget={dateKey,index};
+  document.getElementById('e-name').value=m.name;
+  document.getElementById('e-cal').value=m.cal;
+  document.getElementById('e-protein').value=m.protein;
+  document.getElementById('e-carbs').value=m.carbs;
+  document.getElementById('e-fat').value=m.fat;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+function closeModal(e) {
+  if (e && e.target!==document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('show');
+  editTarget=null;
+}
+function saveEdit() {
+  if (!editTarget) return;
+  const {dateKey,index}=editTarget;
+  data[dateKey][index]={
+    ...data[dateKey][index],
+    name:document.getElementById('e-name').value||'Food',
+    cal:Math.round(Number(document.getElementById('e-cal').value)||0),
+    protein:Math.round(Number(document.getElementById('e-protein').value)||0),
+    carbs:Math.round(Number(document.getElementById('e-carbs').value)||0),
+    fat:Math.round(Number(document.getElementById('e-fat').value)||0),
+  };
+  save(); render();
+  document.getElementById('modal-overlay').classList.remove('show');
+  editTarget=null;
+  showToast('Entry updated');
 }
 
 function render() {
@@ -257,20 +399,33 @@ function render() {
   const pct=Math.min(100,Math.round((tot.cal/goals.cal)*100));
   const fill=document.getElementById('progress-fill');
   fill.style.width=pct+'%'; fill.classList.toggle('over',over);
+
   const list=document.getElementById('meal-list');
   if (!meals.length) {
     list.innerHTML='<div class="empty"><div class="empty-icon">🎙️</div>Tap the text box and use your mic,<br>or tap 📷 to log from a photo.</div>';
   } else {
     list.innerHTML=meals.map((m,i)=>`
-      <div class="entry-card">
-        <div class="entry-info">
-          <div class="entry-name">${m.name}</div>
-          <div class="entry-macros">P: ${m.protein||0}g &nbsp; C: ${m.carbs||0}g &nbsp; F: ${m.fat||0}g</div>
-          <div class="entry-time">${formatTime(m.time)}</div>
+      <div class="entry-wrap">
+        <div class="entry-actions">
+          <button class="action-edit" onclick="openEdit('${key}',${i})">Edit</button>
+          <button class="action-delete" onclick="deleteEntry('${key}',${i})">Delete</button>
         </div>
-        <div class="entry-cal">${(m.cal||0).toLocaleString()}</div>
-        <button class="del-btn" onclick="deleteEntry('${key}',${i})" aria-label="Delete">×</button>
-      </div>`).join('');
+        <div class="entry-card" id="card-${i}">
+          <div class="entry-info">
+            <div class="entry-name">${m.name}</div>
+            <div class="entry-macros">P: ${m.protein||0}g &nbsp; C: ${m.carbs||0}g &nbsp; F: ${m.fat||0}g</div>
+            <div class="entry-time">${formatTime(m.time)}</div>
+          </div>
+          <div class="entry-cal">${(m.cal||0).toLocaleString()}</div>
+        </div>
+      </div>`).join('')+
+      '<p class="hint-text">Swipe left to edit or delete</p>';
+
+    // Attach swipe handlers
+    meals.forEach((_,i)=>{
+      const card=document.getElementById('card-'+i);
+      if (card) initSwipe(card,key,i);
+    });
   }
   renderHistory();
 }
@@ -306,11 +461,6 @@ function toggleDay(d) {
   const el=document.getElementById('day-'+d);
   el.style.display=el.style.display==='block'?'none':'block';
 }
-function deleteEntry(dateKey,index) {
-  data[dateKey].splice(index,1);
-  if (!data[dateKey].length) delete data[dateKey];
-  save(); render();
-}
 function clearToday() {
   if (!confirm('Clear all entries for today?')) return;
   delete data[todayKey()]; save(); render();
@@ -341,6 +491,7 @@ function showTab(name) {
     document.getElementById('g-carbs').value=goals.carbs;
     document.getElementById('g-fat').value=goals.fat;
   }
+  resetSwipe();
 }
 function handlePhoto(event) {
   const file=event.target.files[0];
@@ -350,8 +501,7 @@ function handlePhoto(event) {
     const dataUrl=e.target.result;
     pendingImageB64=dataUrl.split(',')[1];
     pendingImageType=file.type||'image/jpeg';
-    const container=document.getElementById('img-preview-container');
-    container.innerHTML=`<div class="img-preview-wrap">
+    document.getElementById('img-preview-container').innerHTML=`<div class="img-preview-wrap">
       <img class="img-preview" src="${dataUrl}" alt="Food photo">
       <button class="img-remove" onclick="removePhoto()">×</button>
     </div>`;
@@ -377,14 +527,14 @@ async function submitEntry() {
   const text=textarea.value.trim();
   if (!text&&!pendingImageB64) return;
   const apiKey=getApiKey();
-  if (!apiKey) { showToast('No API key \u2014 check Settings'); return; }
+  if (!apiKey) { showToast('No API key — check Settings'); return; }
 
   const btn=document.getElementById('send-btn');
   const loading=document.getElementById('loading-msg');
   btn.disabled=true;
   loading.textContent='Estimating\u2026';
 
-  const system='You are a nutrition estimator. Return ONLY a valid JSON array, nothing else \u2014 no prose, no markdown, no code fences. Each object: {"name":"food name","cal":integer,"protein":integer,"carbs":integer,"fat":integer}. Macros in grams. Multiple foods = multiple objects.';
+  const system='You are a nutrition estimator. Return ONLY a valid JSON array, nothing else — no prose, no markdown, no code fences. Each object: {"name":"food name","cal":integer,"protein":integer,"carbs":integer,"fat":integer}. Macros in grams. Multiple foods = multiple objects.';
   const userText=text?'What I ate: '+text:'Estimate calories and macros from this photo.';
 
   try {
@@ -414,20 +564,12 @@ async function submitEntry() {
 
     let apiJson;
     try { apiJson=JSON.parse(rawText); } catch(e) { throw new Error('Bad API response'); }
-
     const raw=(apiJson.content?.[0]?.text||'').trim();
-    console.log('Raw API response:', raw);
 
     let entries=null;
-    // Try direct parse
-    try { const parsed=JSON.parse(raw); if(Array.isArray(parsed)) entries=parsed; } catch(e) {}
-    // Try extracting [...] block
-    if (!entries) {
-      const m=raw.match(/\[[\s\S]*\]/);
-      if (m) { try { const parsed=JSON.parse(m[0]); if(Array.isArray(parsed)) entries=parsed; } catch(e) {} }
-    }
-
-    if (!entries||!entries.length) throw new Error('Parse failed. Response: '+raw.slice(0,80));
+    try { const p=JSON.parse(raw); if(Array.isArray(p)) entries=p; } catch(e) {}
+    if (!entries) { const m=raw.match(/\[[\s\S]*\]/); if(m) { try { const p=JSON.parse(m[0]); if(Array.isArray(p)) entries=p; } catch(e) {} } }
+    if (!entries||!entries.length) throw new Error('Could not parse: '+raw.slice(0,80));
 
     const key=todayKey();
     if (!data[key]) data[key]=[];
@@ -451,6 +593,9 @@ async function submitEntry() {
   btn.disabled=false;
   loading.textContent='\u00a0';
 }
+
+// Close modal on back button (Android)
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
 
 init();
 </script>
