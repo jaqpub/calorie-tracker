@@ -377,21 +377,22 @@ async function submitEntry() {
   const text=textarea.value.trim();
   if (!text&&!pendingImageB64) return;
   const apiKey=getApiKey();
-  if (!apiKey) { showToast('No API key — check Settings'); return; }
+  if (!apiKey) { showToast('No API key \u2014 check Settings'); return; }
 
   const btn=document.getElementById('send-btn');
   const loading=document.getElementById('loading-msg');
   btn.disabled=true;
-  loading.textContent='Estimating calories and macros…';
+  loading.textContent='Estimating\u2026';
 
-  const prompt=`You are a nutrition estimator. The user describes food they ate, possibly with a photo. Return ONLY a valid JSON array — no markdown, no code fences, no explanation, nothing before or after the array. Each item must have: {"name":"brief food name","cal":number,"protein":number,"carbs":number,"fat":number}. All numbers are integers. Macros in grams. Be accurate for typical portions. If multiple foods are shown or described, return multiple entries. Start your response with [ and end with ].${text?'\n\nUser said: "'+text+'"':'\n\nNo description — estimate from the photo only.'}`;
+  const system='You are a nutrition estimator. Return ONLY a valid JSON array, nothing else \u2014 no prose, no markdown, no code fences. Each object: {"name":"food name","cal":integer,"protein":integer,"carbs":integer,"fat":integer}. Macros in grams. Multiple foods = multiple objects.';
+  const userText=text?'What I ate: '+text:'Estimate calories and macros from this photo.';
 
   try {
     const content=[];
     if (pendingImageB64) {
-      content.push({type:'image',source:{type:'base64',media_type:pendingImageType,data:pendingImageB64}});
+      content.push({type:'image',source:{type:'base64',media_type:pendingImageType||'image/jpeg',data:pendingImageB64}});
     }
-    content.push({type:'text',text:prompt});
+    content.push({type:'text',text:userText});
 
     const res=await fetch(API,{
       method:'POST',
@@ -401,20 +402,32 @@ async function submitEntry() {
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system,messages:[{role:'user',content}]})
     });
 
+    const rawText=await res.text();
     if (!res.ok) {
-      const err=await res.json().catch(()=>({error:{message:'HTTP '+res.status}}));
-      throw new Error(err.error?.message||'HTTP '+res.status);
+      let msg='HTTP '+res.status;
+      try { msg=JSON.parse(rawText).error?.message||msg; } catch(e) {}
+      throw new Error(msg);
     }
 
-    const json=await res.json();
-    const raw=(json.content?.[0]?.text||'').trim();
-    const match=raw.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('No JSON found');
-    const entries=JSON.parse(match[0]);
-    if (!Array.isArray(entries)||!entries.length) throw new Error('Empty result');
+    let apiJson;
+    try { apiJson=JSON.parse(rawText); } catch(e) { throw new Error('Bad API response'); }
+
+    const raw=(apiJson.content?.[0]?.text||'').trim();
+    console.log('Raw API response:', raw);
+
+    let entries=null;
+    // Try direct parse
+    try { const parsed=JSON.parse(raw); if(Array.isArray(parsed)) entries=parsed; } catch(e) {}
+    // Try extracting [...] block
+    if (!entries) {
+      const m=raw.match(/\[[\s\S]*\]/);
+      if (m) { try { const parsed=JSON.parse(m[0]); if(Array.isArray(parsed)) entries=parsed; } catch(e) {} }
+    }
+
+    if (!entries||!entries.length) throw new Error('Parse failed. Response: '+raw.slice(0,80));
 
     const key=todayKey();
     if (!data[key]) data[key]=[];
@@ -428,10 +441,11 @@ async function submitEntry() {
     }));
     save(); render();
     const totalCal=entries.reduce((s,e)=>s+(Number(e.cal)||0),0);
-    showToast('Logged · '+Math.round(totalCal).toLocaleString()+' cal');
+    showToast('Logged \u00b7 '+Math.round(totalCal).toLocaleString()+' cal');
     textarea.value=''; textarea.style.height='auto';
     removePhoto(); showTab('today');
   } catch(err) {
+    console.error('submitEntry error:',err);
     showToast('Error: '+(err.message||'Try again'));
   }
   btn.disabled=false;
