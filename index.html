@@ -16,6 +16,18 @@
   --protein: #1D9E75; --carbs: #d97706; --fat: #db2777;
 }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; -webkit-font-smoothing: antialiased; overscroll-behavior: none; }
+
+/* Setup screen */
+.setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 24px; text-align: center; }
+.setup-screen h1 { font-size: 22px; font-weight: 600; margin-bottom: 10px; }
+.setup-screen p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; }
+.setup-box { width: 100%; background: var(--surface); border-radius: 16px; border: 0.5px solid var(--border); padding: 20px; }
+.setup-box label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px; text-align: left; }
+.setup-box input { width: 100%; border: 1px solid var(--border-strong); border-radius: 10px; padding: 12px 14px; font-size: 14px; font-family: monospace; background: var(--bg); color: var(--text); outline: none; margin-bottom: 12px; }
+.setup-box input:focus { border-color: var(--accent); }
+.setup-btn { width: 100%; padding: 14px; border-radius: 10px; border: none; background: var(--accent); color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.setup-note { font-size: 12px; color: var(--hint); margin-top: 16px; line-height: 1.5; }
+
 .header { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 52px 18px 0; position: sticky; top: 0; z-index: 10; }
 .header-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
 .header h1 { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
@@ -43,8 +55,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .empty-icon { font-size: 40px; margin-bottom: 14px; }
 .view { display: none; }
 .view.active { display: block; }
-
-/* Input bar */
 .input-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 0.5px solid var(--border); padding: 10px 12px 36px; z-index: 20; }
 .input-row { display: flex; gap: 8px; align-items: flex-end; }
 .log-textarea { flex: 1; border: 1px solid var(--border-strong); border-radius: 22px; padding: 11px 16px; font-size: 16px; font-family: inherit; resize: none; background: var(--bg); color: var(--text); line-height: 1.4; min-height: 44px; max-height: 120px; outline: none; overflow-y: auto; -webkit-appearance: none; }
@@ -52,13 +62,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border-strong); background: var(--bg); color: var(--muted); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
 .send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--accent); border: none; color: #fff; font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; -webkit-appearance: none; }
 .send-btn:disabled { opacity: 0.4; }
-.icon-btn:disabled { opacity: 0.4; }
-
-/* Image preview */
 .img-preview-wrap { margin-bottom: 8px; position: relative; display: inline-block; }
 .img-preview { height: 72px; border-radius: 10px; border: 0.5px solid var(--border); display: block; }
 .img-remove { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: var(--text); color: #fff; border: none; font-size: 14px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
 .loading-msg { font-size: 13px; color: var(--muted); margin-top: 7px; text-align: center; min-height: 18px; }
 .toast { position: fixed; bottom: 120px; left: 50%; transform: translateX(-50%); background: var(--text); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 20px; z-index: 30; opacity: 0; transition: opacity 0.2s; white-space: nowrap; pointer-events: none; }
 .toast.show { opacity: 1; }
@@ -83,80 +89,92 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 </head>
 <body>
 
-<div class="header">
-  <div class="header-top">
-    <h1>Calorie Log</h1>
-    <span class="date-label" id="date-label"></span>
+<!-- Setup screen (shown if no API key stored) -->
+<div id="setup-screen" class="setup-screen" style="display:none">
+  <div style="font-size:48px;margin-bottom:16px">🥗</div>
+  <h1>Calorie Log</h1>
+  <p>To estimate calories and macros automatically, this app needs your Anthropic API key. It's stored only on your device.</p>
+  <div class="setup-box">
+    <label>Anthropic API Key</label>
+    <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="setup-btn" onclick="saveApiKey()">Save & Continue</button>
   </div>
-  <div class="pills">
-    <div class="pill">
-      <span class="pill-val" id="s-cal">—</span>
-      <span class="pill-label">Cal</span>
-      <span class="pill-sub" id="s-cal-sub">&nbsp;</span>
-    </div>
-    <div class="pill">
-      <span class="pill-val" id="s-protein" style="color:var(--protein)">—</span>
-      <span class="pill-label">Protein</span>
-      <span class="pill-sub" id="s-protein-sub">&nbsp;</span>
-    </div>
-    <div class="pill">
-      <span class="pill-val" id="s-carbs" style="color:var(--carbs)">—</span>
-      <span class="pill-label">Carbs</span>
-      <span class="pill-sub" id="s-carbs-sub">&nbsp;</span>
-    </div>
-    <div class="pill">
-      <span class="pill-val" id="s-fat" style="color:var(--fat)">—</span>
-      <span class="pill-label">Fat</span>
-      <span class="pill-sub" id="s-fat-sub">&nbsp;</span>
-    </div>
-  </div>
-  <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('today')" id="tab-today">Today</button>
-    <button class="tab" onclick="showTab('history')" id="tab-history">History</button>
-    <button class="tab" onclick="showTab('settings')" id="tab-settings">Settings</button>
-  </div>
+  <p class="setup-note">Get a key at console.anthropic.com → API Keys. Usage costs a fraction of a cent per entry.</p>
 </div>
 
-<div class="log-area">
-  <div class="view active" id="view-today">
-    <div id="meal-list"></div>
-  </div>
-  <div class="view" id="view-history">
-    <div id="history-list"></div>
-  </div>
-  <div class="view" id="view-settings">
-    <div class="settings-box">
-      <div class="section-label">Daily goals</div>
-      <div class="settings-row"><label>Calories</label><input type="number" id="g-cal" placeholder="2100"></div>
-      <div class="settings-row"><label>Protein (g)</label><input type="number" id="g-protein" placeholder="160"></div>
-      <div class="settings-row"><label>Carbs (g)</label><input type="number" id="g-carbs" placeholder="220"></div>
-      <div class="settings-row"><label>Fat (g)</label><input type="number" id="g-fat" placeholder="65"></div>
-      <button class="btn-full btn-primary" onclick="saveGoals()">Save goals</button>
+<!-- Main app (hidden until API key present) -->
+<div id="main-app" style="display:none">
+  <div class="header">
+    <div class="header-top">
+      <h1>Calorie Log</h1>
+      <span class="date-label" id="date-label"></span>
     </div>
-    <div class="settings-box">
-      <div class="section-label">Data</div>
-      <button class="btn-full btn-danger" onclick="clearToday()">Clear today's entries</button>
-      <button class="btn-full btn-muted" style="margin-top:6px" onclick="clearAll()">Clear all data</button>
+    <div class="pills">
+      <div class="pill">
+        <span class="pill-val" id="s-cal">—</span>
+        <span class="pill-label">Cal</span>
+        <span class="pill-sub" id="s-cal-sub">&nbsp;</span>
+      </div>
+      <div class="pill">
+        <span class="pill-val" id="s-protein" style="color:var(--protein)">—</span>
+        <span class="pill-label">Protein</span>
+        <span class="pill-sub" id="s-protein-sub">&nbsp;</span>
+      </div>
+      <div class="pill">
+        <span class="pill-val" id="s-carbs" style="color:var(--carbs)">—</span>
+        <span class="pill-label">Carbs</span>
+        <span class="pill-sub" id="s-carbs-sub">&nbsp;</span>
+      </div>
+      <div class="pill">
+        <span class="pill-val" id="s-fat" style="color:var(--fat)">—</span>
+        <span class="pill-label">Fat</span>
+        <span class="pill-sub" id="s-fat-sub">&nbsp;</span>
+      </div>
     </div>
-    <div class="settings-box">
-      <div class="section-label">How to log</div>
-      <p style="font-size:13px;color:var(--muted);line-height:1.6">Tap the text box and use your mic to say what you ate — or tap the 📷 button to snap or upload a photo. Claude estimates your calories and macros automatically.</p>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('today')" id="tab-today">Today</button>
+      <button class="tab" onclick="showTab('history')" id="tab-history">History</button>
+      <button class="tab" onclick="showTab('settings')" id="tab-settings">Settings</button>
     </div>
   </div>
-</div>
 
-<!-- Hidden file input -->
-<input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
-
-<div class="input-bar" id="input-bar">
-  <div id="img-preview-container"></div>
-  <div class="input-row">
-    <button class="icon-btn" onclick="document.getElementById('photo-input').click()" id="photo-btn" aria-label="Add photo">📷</button>
-    <textarea class="log-textarea" id="log-input" placeholder="What did you eat?" rows="1"></textarea>
-    <button class="send-btn" id="send-btn" onclick="submitEntry()" aria-label="Log food">↑</button>
+  <div class="log-area">
+    <div class="view active" id="view-today"><div id="meal-list"></div></div>
+    <div class="view" id="view-history"><div id="history-list"></div></div>
+    <div class="view" id="view-settings">
+      <div class="settings-box">
+        <div class="section-label">Daily goals</div>
+        <div class="settings-row"><label>Calories</label><input type="number" id="g-cal" placeholder="2100"></div>
+        <div class="settings-row"><label>Protein (g)</label><input type="number" id="g-protein" placeholder="160"></div>
+        <div class="settings-row"><label>Carbs (g)</label><input type="number" id="g-carbs" placeholder="220"></div>
+        <div class="settings-row"><label>Fat (g)</label><input type="number" id="g-fat" placeholder="65"></div>
+        <button class="btn-full btn-primary" onclick="saveGoals()">Save goals</button>
+      </div>
+      <div class="settings-box">
+        <div class="section-label">Data</div>
+        <button class="btn-full btn-danger" onclick="clearToday()">Clear today's entries</button>
+        <button class="btn-full btn-muted" style="margin-top:6px" onclick="clearAll()">Clear all data</button>
+      </div>
+      <div class="settings-box">
+        <div class="section-label">API Key</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:10px">Your key is stored locally on this device only.</p>
+        <button class="btn-full btn-danger" onclick="resetApiKey()">Reset API key</button>
+      </div>
+    </div>
   </div>
-  <div class="loading-msg" id="loading-msg">&nbsp;</div>
+
+  <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhoto(event)">
+
+  <div class="input-bar" id="input-bar">
+    <div id="img-preview-container"></div>
+    <div class="input-row">
+      <button class="icon-btn" onclick="document.getElementById('photo-input').click()" aria-label="Add photo">📷</button>
+      <textarea class="log-textarea" id="log-input" placeholder="What did you eat?" rows="1"></textarea>
+      <button class="send-btn" id="send-btn" onclick="submitEntry()" aria-label="Log food">↑</button>
+    </div>
+    <div class="loading-msg" id="loading-msg">&nbsp;</div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -165,6 +183,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 const API = 'https://api.anthropic.com/v1/messages';
 const DATA_KEY = 'clog-v4';
 const GOALS_KEY = 'clog-goals-v4';
+const APIKEY_KEY = 'clog-apikey';
 const DEFAULT_GOALS = {cal:2100,protein:160,carbs:220,fat:65};
 
 let data = {}, goals = {...DEFAULT_GOALS}, toastTimer;
@@ -187,6 +206,34 @@ function load() {
   try { goals = JSON.parse(localStorage.getItem(GOALS_KEY)||'null')||{...DEFAULT_GOALS}; } catch { goals={...DEFAULT_GOALS}; }
 }
 function save() { localStorage.setItem(DATA_KEY,JSON.stringify(data)); }
+function getApiKey() { return localStorage.getItem(APIKEY_KEY)||''; }
+
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) { alert('That doesn\'t look right — key should start with sk-ant-'); return; }
+  localStorage.setItem(APIKEY_KEY, key);
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  render();
+}
+
+function resetApiKey() {
+  if (!confirm('Remove API key? You\'ll need to enter it again.')) return;
+  localStorage.removeItem(APIKEY_KEY);
+  document.getElementById('main-app').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'flex';
+}
+
+function init() {
+  load();
+  if (getApiKey()) {
+    document.getElementById('main-app').style.display = 'block';
+    render();
+  } else {
+    document.getElementById('setup-screen').style.display = 'flex';
+  }
+}
+
 function showToast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -295,125 +342,103 @@ function showTab(name) {
     document.getElementById('g-fat').value=goals.fat;
   }
 }
-
-// Photo handling
 function handlePhoto(event) {
-  const file = event.target.files[0];
+  const file=event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const dataUrl = e.target.result;
-    pendingImageB64 = dataUrl.split(',')[1];
-    pendingImageType = file.type || 'image/jpeg';
-    // Show preview
-    const container = document.getElementById('img-preview-container');
-    container.innerHTML = `<div class="img-preview-wrap">
+  const reader=new FileReader();
+  reader.onload=function(e) {
+    const dataUrl=e.target.result;
+    pendingImageB64=dataUrl.split(',')[1];
+    pendingImageType=file.type||'image/jpeg';
+    const container=document.getElementById('img-preview-container');
+    container.innerHTML=`<div class="img-preview-wrap">
       <img class="img-preview" src="${dataUrl}" alt="Food photo">
-      <button class="img-remove" onclick="removePhoto()" aria-label="Remove photo">×</button>
+      <button class="img-remove" onclick="removePhoto()">×</button>
     </div>`;
   };
   reader.readAsDataURL(file);
-  // Reset input so same file can be re-selected
-  event.target.value = '';
+  event.target.value='';
 }
-
 function removePhoto() {
-  pendingImageB64 = null;
-  pendingImageType = null;
-  document.getElementById('img-preview-container').innerHTML = '';
+  pendingImageB64=null; pendingImageType=null;
+  document.getElementById('img-preview-container').innerHTML='';
 }
 
-// Auto-resize textarea
-const textarea = document.getElementById('log-input');
-textarea.addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+const textarea=document.getElementById('log-input');
+textarea.addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
 });
-textarea.addEventListener('keydown', e => {
-  if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); submitEntry(); }
+textarea.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitEntry();}
 });
 
 async function submitEntry() {
-  const text = textarea.value.trim();
-  if (!text && !pendingImageB64) return;
+  const text=textarea.value.trim();
+  if (!text&&!pendingImageB64) return;
+  const apiKey=getApiKey();
+  if (!apiKey) { showToast('No API key — check Settings'); return; }
 
-  const btn = document.getElementById('send-btn');
-  const loading = document.getElementById('loading-msg');
-  btn.disabled = true;
-  loading.textContent = 'Estimating calories and macros…';
+  const btn=document.getElementById('send-btn');
+  const loading=document.getElementById('loading-msg');
+  btn.disabled=true;
+  loading.textContent='Estimating calories and macros…';
 
-  const prompt = `You are a nutrition estimator. The user describes food they ate, possibly with a photo. Return ONLY a valid JSON array — no markdown, no code fences, no explanation, nothing before or after the array. Each item must have: {"name":"brief food name","cal":number,"protein":number,"carbs":number,"fat":number}. All numbers are integers. Macros in grams. Be accurate for typical portions. If multiple foods are shown or described, return multiple entries. Start your response with [ and end with ].${text ? '\n\nUser said: "' + text + '"' : '\n\nNo description provided — estimate from the photo only.'}`;
+  const prompt=`You are a nutrition estimator. The user describes food they ate, possibly with a photo. Return ONLY a valid JSON array — no markdown, no code fences, no explanation, nothing before or after the array. Each item must have: {"name":"brief food name","cal":number,"protein":number,"carbs":number,"fat":number}. All numbers are integers. Macros in grams. Be accurate for typical portions. If multiple foods are shown or described, return multiple entries. Start your response with [ and end with ].${text?'\n\nUser said: "'+text+'"':'\n\nNo description — estimate from the photo only.'}`;
 
   try {
-    // Build message content
-    const content = [];
+    const content=[];
     if (pendingImageB64) {
-      content.push({
-        type: 'image',
-        source: { type: 'base64', media_type: pendingImageType, data: pendingImageB64 }
-      });
+      content.push({type:'image',source:{type:'base64',media_type:pendingImageType,data:pendingImageB64}});
     }
-    content.push({ type: 'text', text: prompt });
+    content.push({type:'text',text:prompt});
 
-    const res = await fetch(API, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': '',
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+    const res=await fetch(API,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
       },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        messages: [{ role: 'user', content }]
-      })
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content}]})
     });
 
     if (!res.ok) {
-      const errText = await res.text();
-      console.error('API error:', res.status, errText);
-      throw new Error('API error ' + res.status);
+      const err=await res.json().catch(()=>({error:{message:'HTTP '+res.status}}));
+      throw new Error(err.error?.message||'HTTP '+res.status);
     }
 
-    const json = await res.json();
-    const raw = (json.content?.[0]?.text || '').trim();
+    const json=await res.json();
+    const raw=(json.content?.[0]?.text||'').trim();
+    const match=raw.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON found');
+    const entries=JSON.parse(match[0]);
+    if (!Array.isArray(entries)||!entries.length) throw new Error('Empty result');
 
-    // Robustly extract JSON array
-    const match = raw.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error('No JSON array found in: ' + raw);
-    const entries = JSON.parse(match[0]);
-
-    if (!Array.isArray(entries) || !entries.length) throw new Error('Empty array');
-
-    const key = todayKey();
-    if (!data[key]) data[key] = [];
-    entries.forEach(e => data[key].push({
-      name: String(e.name || 'Food'),
-      cal: Math.round(Number(e.cal) || 0),
-      protein: Math.round(Number(e.protein) || 0),
-      carbs: Math.round(Number(e.carbs) || 0),
-      fat: Math.round(Number(e.fat) || 0),
-      time: new Date().toISOString()
+    const key=todayKey();
+    if (!data[key]) data[key]=[];
+    entries.forEach(e=>data[key].push({
+      name:String(e.name||'Food'),
+      cal:Math.round(Number(e.cal)||0),
+      protein:Math.round(Number(e.protein)||0),
+      carbs:Math.round(Number(e.carbs)||0),
+      fat:Math.round(Number(e.fat)||0),
+      time:new Date().toISOString()
     }));
     save(); render();
-
-    const totalCal = entries.reduce((s,e) => s + (Number(e.cal)||0), 0);
-    showToast('Logged · ' + Math.round(totalCal).toLocaleString() + ' cal');
-    textarea.value = ''; textarea.style.height = 'auto';
-    removePhoto();
-    showTab('today');
-
+    const totalCal=entries.reduce((s,e)=>s+(Number(e.cal)||0),0);
+    showToast('Logged · '+Math.round(totalCal).toLocaleString()+' cal');
+    textarea.value=''; textarea.style.height='auto';
+    removePhoto(); showTab('today');
   } catch(err) {
-    console.error('Submit error:', err);
-    showToast('Error: ' + (err.message || 'Try again'));
+    showToast('Error: '+(err.message||'Try again'));
   }
-
-  btn.disabled = false;
-  loading.textContent = '\u00a0';
+  btn.disabled=false;
+  loading.textContent='\u00a0';
 }
 
-load(); render();
+init();
 </script>
 </body>
 </html>
