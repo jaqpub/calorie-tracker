@@ -527,22 +527,42 @@ async function submitEntry() {
   const text=textarea.value.trim();
   if (!text&&!pendingImageB64) return;
   const apiKey=getApiKey();
-  if (!apiKey) { showToast('No API key — check Settings'); return; }
+  if (!apiKey) { showToast('No API key \u2014 check Settings'); return; }
 
   const btn=document.getElementById('send-btn');
   const loading=document.getElementById('loading-msg');
   btn.disabled=true;
-  loading.textContent='Estimating\u2026';
 
-  const system='You are a nutrition estimator. Return ONLY a valid JSON array, nothing else — no prose, no markdown, no code fences. Each object: {"name":"food name","cal":integer,"protein":integer,"carbs":integer,"fat":integer}. Macros in grams. Multiple foods = multiple objects.';
+  const system='You are a nutrition estimator. Return ONLY a valid JSON array, nothing else \u2014 no prose, no markdown, no code fences. Each object: {"name":"food name","cal":integer,"protein":integer,"carbs":integer,"fat":integer}. Macros in grams. Multiple foods = multiple objects.';
   const userText=text?'What I ate: '+text:'Estimate calories and macros from this photo.';
+
+  // Decide whether to use web search
+  // Use it when: text input present and no image, or image is a product (not a plate of food)
+  // We use web_search tool for packaged/named products to get accurate label data
+  const useSearch = !!text; // search whenever there's a text description
 
   try {
     const content=[];
     if (pendingImageB64) {
       content.push({type:'image',source:{type:'base64',media_type:pendingImageType||'image/jpeg',data:pendingImageB64}});
     }
-    content.push({type:'text',text:userText});
+    content.push({type:'text',text: useSearch
+      ? userText + '\n\nIf this is a packaged/branded product, use the web_search tool to look up its exact nutrition facts label before estimating. For restaurant items, search for the restaurant nutrition info. For home-cooked food or unclear items, estimate directly without searching.'
+      : userText
+    });
+
+    const requestBody = {
+      model:'claude-sonnet-4-6',
+      max_tokens:2048,
+      system,
+      messages:[{role:'user',content}]
+    };
+
+    if (useSearch) {
+      requestBody.tools = [{type:'web_search_20250305',name:'web_search'}];
+    }
+
+    loading.textContent = useSearch ? 'Looking up nutrition data\u2026' : 'Estimating\u2026';
 
     const res=await fetch(API,{
       method:'POST',
@@ -552,7 +572,7 @@ async function submitEntry() {
         'anthropic-version':'2023-06-01',
         'anthropic-dangerous-direct-browser-access':'true'
       },
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1024,system,messages:[{role:'user',content}]})
+      body:JSON.stringify(requestBody)
     });
 
     const rawText=await res.text();
@@ -564,12 +584,68 @@ async function submitEntry() {
 
     let apiJson;
     try { apiJson=JSON.parse(rawText); } catch(e) { throw new Error('Bad API response'); }
-    const raw=(apiJson.content?.[0]?.text||'').trim();
+
+    // Handle tool_use flow - if model used web search, it returns tool_use blocks
+    // then we need to send results back and get final answer
+    let finalText = '';
+    const firstContent = apiJson.content || [];
+
+    const toolUseBlocks = firstContent.filter(b => b.type === 'tool_use');
+
+    if (toolUseBlocks.length > 0) {
+      loading.textContent = 'Found nutrition data, calculating\u2026';
+
+      // Build tool results - the search results are embedded in the tool_use response
+      // We send them back as tool_result blocks
+      const toolResults = toolUseBlocks.map(block => ({
+        type: 'tool_result',
+        tool_use_id: block.id,
+        content: 'Search completed. Use the information you found to provide accurate nutrition data.'
+      }));
+
+      // Second call with tool results
+      const res2 = await fetch(API, {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key':apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body:JSON.stringify({
+          model:'claude-sonnet-4-6',
+          max_tokens:2048,
+          system,
+          tools:[{type:'web_search_20250305',name:'web_search'}],
+          messages:[
+            {role:'user',content},
+            {role:'assistant',content:firstContent},
+            {role:'user',content:toolResults}
+          ]
+        })
+      });
+
+      const rawText2 = await res2.text();
+      if (!res2.ok) {
+        let msg='HTTP '+res2.status;
+        try { msg=JSON.parse(rawText2).error?.message||msg; } catch(e) {}
+        throw new Error(msg);
+      }
+      const apiJson2 = JSON.parse(rawText2);
+      const textBlock = (apiJson2.content||[]).find(b=>b.type==='text');
+      finalText = textBlock ? textBlock.text.trim() : '';
+    } else {
+      // No tool use - direct text response
+      const textBlock = firstContent.find(b=>b.type==='text');
+      finalText = textBlock ? textBlock.text.trim() : '';
+    }
+
+    console.log('Final response:', finalText);
 
     let entries=null;
-    try { const p=JSON.parse(raw); if(Array.isArray(p)) entries=p; } catch(e) {}
-    if (!entries) { const m=raw.match(/\[[\s\S]*\]/); if(m) { try { const p=JSON.parse(m[0]); if(Array.isArray(p)) entries=p; } catch(e) {} } }
-    if (!entries||!entries.length) throw new Error('Could not parse: '+raw.slice(0,80));
+    try { const p=JSON.parse(finalText); if(Array.isArray(p)) entries=p; } catch(e) {}
+    if (!entries) { const m=finalText.match(/\[[\s\S]*\]/); if(m) { try { const p=JSON.parse(m[0]); if(Array.isArray(p)) entries=p; } catch(e) {} } }
+    if (!entries||!entries.length) throw new Error('Could not parse: '+finalText.slice(0,80));
 
     const key=todayKey();
     if (!data[key]) data[key]=[];
